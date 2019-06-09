@@ -1,0 +1,29 @@
+{
+  "name": "homeworks",
+  "version": "1.0.0",
+  "description": "Loftschool NodeJS homeworks",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/puzakov/nodejs-homeworks.git"
+  },
+  "author": "Artem Puzakov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/puzakov/nodejs-homeworks/issues"
+  },
+  "homepage": "https://github.com/puzakov/nodejs-homeworks#readme",
+  "devDependencies": {
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.17.3",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.1.1",
+    "eslint-plugin-standard": "^4.0.0"
+  }
+}
