@@ -20,7 +20,7 @@ const checkArgs = () => {
 
   params.forEach((item, index) => {
     switch (item) {
-      case "--source": {
+      case "-s": {
         if (fs.existsSync(params[index + 1])) {
           sourceDir = params[index + 1];
         } else {
@@ -28,11 +28,11 @@ const checkArgs = () => {
         }
         break;
       }
-      case "--result": {
+      case "-r": {
         resultDir = params[index + 1];
         break;
       }
-      case "--removeSource": {
+      case "-d": {
         removeSource = true;
         break;
       }
