@@ -13,11 +13,6 @@ let sourceDir = null;
 let resultDir = null;
 let removeSource = false;
 
-const argError = message => {
-  console.log(message);
-  process.exit(1);
-};
-
 const checkArgs = async () => {
   const params = process.argv.slice(2);
   console.log(params);
@@ -26,9 +21,9 @@ const checkArgs = async () => {
   if (indexSource >= 0) {
     try {
       await fsStat(params[indexSource + 1]);
-      sourceDir = params[indexSource + 1];
+      sourceDir = params[indexSource + 1];  
     } catch (err) {
-      argError("Unavailable param: source");
+      throw "Unavailable param: source";
     }
   }
   const indexResult = params.indexOf("-r");
@@ -39,10 +34,10 @@ const checkArgs = async () => {
     removeSource = true;
   }
 
-  if (!sourceDir || !resultDir) {
-    argError("=source= and =result= are required params!");
-  }
   console.log({ sourceDir, resultDir, removeSource });
+  if (!sourceDir || !resultDir) {
+    throw "=source= and =result= are required params!";
+  }
 };
 
 const migrateFile = async file => {
@@ -56,7 +51,7 @@ const migrateFile = async file => {
     await fsStat(newFileDir);
   } catch (err) {
     await fsMkdir(newFileDir, { recursive: true });
-  }  
+  }
 
   await fsCopyFile(sourceResolved, destResolved);
   console.log(`${file} was copied to ${newFilePath} \r`);
@@ -88,8 +83,13 @@ const processDirRecursive = async (base, level) => {
 };
 
 const go = async () => {
-  await checkArgs();
-  processDirRecursive(sourceDir, 0);
+  try {
+    await checkArgs();
+    await processDirRecursive(sourceDir, 0);
+  } catch (err) {
+    console.log(err);
+    process.exit(1);
+  }
 };
 
 go();
