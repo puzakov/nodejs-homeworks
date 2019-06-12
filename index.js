@@ -4,125 +4,92 @@ const util = require("util");
 
 const fsMkdir = util.promisify(fs.mkdir);
 const fsCopyFile = util.promisify(fs.copyFile);
+const fsReaddir = util.promisify(fs.readdir);
+const fsStat = util.promisify(fs.stat);
+const fsUnlink = util.promisify(fs.unlink);
+const fsRmdir = util.promisify(fs.rmdir);
 
 let sourceDir = null;
 let resultDir = null;
 let removeSource = false;
-const FilesState = [];
 
 const argError = message => {
   console.log(message);
   process.exit(1);
 };
 
-const checkArgs = () => {
+const checkArgs = async () => {
   const params = process.argv.slice(2);
+  console.log(params);
 
-  params.forEach((item, index) => {
-    switch (item) {
-      case "-s": {
-        if (fs.existsSync(params[index + 1])) {
-          sourceDir = params[index + 1];
-        } else {
-          argError("Unavailable param: source");
-        }
-        break;
-      }
-      case "-r": {
-        resultDir = params[index + 1];
-        break;
-      }
-      case "-d": {
-        removeSource = true;
-        break;
-      }
+  const indexSource = params.indexOf("-s");
+  if (indexSource >= 0) {
+    try {
+      await fsStat(params[indexSource + 1]);
+      sourceDir = params[indexSource + 1];
+    } catch (err) {
+      argError("Unavailable param: source");
     }
-  });
+  }
+  const indexResult = params.indexOf("-r");
+  if (indexResult >= 0) {
+    resultDir = params[indexResult + 1];
+  }
+  if (params.indexOf("-d") >= 0) {
+    removeSource = true;
+  }
 
   if (!sourceDir || !resultDir) {
     argError("=source= and =result= are required params!");
   }
-
-  const resultParamsObject = { sourceDir, resultDir, removeSource };
-  console.log(resultParamsObject);
-};
-
-const copyFile = (source, dest) => {
-  const sourceResolved = path.resolve(source);
-  const destResolved = path.resolve(dest);
-
-  fsCopyFile(sourceResolved, destResolved)
-    .then(() => {
-      console.log(`${source} was copied to ${dest} \r`);
-      const fileState = FilesState.find(item => item.file === source);
-      if (fileState) {
-        fileState.processed = true;
-      }
-    })
-    .catch(err => {
-      throw err;
-    });
+  console.log({ sourceDir, resultDir, removeSource });
 };
 
 const migrateFile = async file => {
   const { base } = path.parse(file);
   const newFileDir = path.join(resultDir, base.substring(0, 1).toUpperCase());
   const newFilePath = path.join(newFileDir, base);
+  const sourceResolved = path.resolve(file);
+  const destResolved = path.resolve(newFilePath);
 
-  if (!fs.existsSync(newFileDir)) {
+  try {
+    await fsStat(newFileDir);
+  } catch (err) {
     await fsMkdir(newFileDir, { recursive: true });
+  }  
+
+  await fsCopyFile(sourceResolved, destResolved);
+  console.log(`${file} was copied to ${newFilePath} \r`);
+  if (removeSource) {
+    await fsUnlink(file);
+    console.log(`${file} was deleted; \r`);
   }
-  copyFile(file, newFilePath);
 };
 
-const processDirRecursive = (base, level) => {
-  const files = fs.readdirSync(base);
-
-  files.forEach(item => {
-    let localBase = path.join(base, item);
-    let state = fs.statSync(localBase);
-    if (state.isDirectory()) {
-      processDirRecursive(localBase, level + 1);
-    } else {
-      FilesState.push({ file: localBase, processed: false });
-      migrateFile(localBase);
-    }
-  });
-};
-
-var deleteFolderRecursive = function(path) {
-  if (fs.existsSync(path)) {
-    fs.readdirSync(path).forEach(function(file, index) {
-      var curPath = path + "/" + file;
-      if (fs.lstatSync(curPath).isDirectory()) {
-        // recurse
-        deleteFolderRecursive(curPath);
+const processDirRecursive = async (base, level) => {
+  const files = await fsReaddir(base);
+  const dirPromise = Promise.all(
+    files.map(async item => {
+      let localBase = path.join(base, item);
+      let state = await fsStat(localBase);
+      if (state.isDirectory()) {
+        await processDirRecursive(localBase, level + 1);
       } else {
-        // delete file
-        fs.unlinkSync(curPath);
+        await migrateFile(localBase);
       }
-    });
-    fs.rmdirSync(path);
-  }
-};
-
-const waitingToRemoveSource = () => {
-  console.log("Monitoring...");
-  const allProcessed = FilesState.reduce(
-    (acc, { processed }) => acc && processed
+    })
   );
 
-  if (allProcessed) {
-    deleteFolderRecursive(sourceDir);
-    console.log("Source dir removed!");
-  } else {
-    setTimeout(waitingToRemoveSource, 100);
+  await dirPromise;
+  if (removeSource) {
+    await fsRmdir(base);
+    console.log(`Directory ${base} was deleted; \r`);
   }
 };
 
-checkArgs();
-processDirRecursive(sourceDir, 0);
+const go = async () => {
+  await checkArgs();
+  processDirRecursive(sourceDir, 0);
+};
 
-if (removeSource) {
-  waitingToRemoveSource();
-}
+go();
