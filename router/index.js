@@ -3,8 +3,8 @@ const Router = require("koa-router");
 const router = new Router();
 
 router.all(/.*/, (ctx, next) => { 
-  console.log(`Request ${ctx.request.method}: ${ctx.request.url} ${ctx.status}`);
   next();
+  console.log(`Request ${ctx.request.method}: ${ctx.request.url} ${ctx.status}`);
 })
 
 router.get("/", mainCtrl.get);
