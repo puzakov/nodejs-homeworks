@@ -1,4 +1,6 @@
 const { webError, lowdb } = require("../util");
+const fs = require('fs');
+const path = require('path');
 
 exports.get = async (ctx, next) => {
   try {
@@ -34,13 +36,52 @@ exports.postSkills = async (ctx, next) => {
   }
 };
 
-exports.postUpload = async (ctx, next) => {};
+exports.postUpload = async (ctx, next) => {
+  try {
+    const { name, price } = ctx.request.body;
+    const { name: photoName, size, path: tempPath } = ctx.request.files.photo;
+    const uploadDir = path.join(
+      process.cwd(),
+      "/public",
+      "assets",
+      "img",
+      "products"
+    );
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir);
+    }
+    if (!name || !price) {
+      fs.unlinkSync(tempPath);
+      throw "All fields are required";
+    }
+    if (!photoName || !size) {
+      fs.unlinkSync(tempPath);
+      throw "File not saved";
+    }
+
+    fs.renameSync(tempPath, path.join(uploadDir, photoName));
+
+    lowdb
+      .get("products")
+      .push({
+        src: "./assets/img/products/" + photoName,
+        name: name,
+        price: price
+      })
+      .write();
+
+    ctx.redirect("/admin");
+  } catch (err) {
+    webError(err, ctx, 400);
+  }
+};
 
 const setSkillValue = (key, value) => {
   lowdb
     .get("skills")
     .find({ id: key })
-    .assign({ number: value })
+    .assign({ number: parseInt(value) })
     .write();
 };
 
