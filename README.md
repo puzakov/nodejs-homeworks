@@ -1,3 +1,9 @@
 Loftschool NodeJS homeworks
 
-each homework to exactly named branch
+### Login credentials
+```
+email: test@test.com
+password: 123test123
+```
+
+
