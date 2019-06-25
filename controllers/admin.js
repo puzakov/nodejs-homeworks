@@ -1,66 +1,55 @@
-const { webError, lowdb } = require("../util");
-const fs = require('fs');
-const path = require('path');
+const { lowdb } = require("../util");
+const fs = require("fs");
+const path = require("path");
 
-exports.get = async (ctx, next) => {
-  try {
-    if (!ctx.session.isAuth) {
-      ctx.redirect("/login");
-      return;
-    }
-
-    ctx.render("admin", getSkillValues());
-  } catch (err) {
-    webError(err, ctx, 400);
+exports.get = (request, response) => {
+  if (!request.session.isAuth) {
+    response.redirect("/login");
+    return;
   }
+
+  response.render("admin", { ...getSkillValues(), ...request.flash() });
 };
 
-exports.postSkills = async (ctx, next) => {
-  try {
-    const { age, concerts, cities, years } = getSkillValues();
-    const {
-      age: newAge,
-      concerts: newConcerts,
-      cities: newCities,
-      years: newYears
-    } = ctx.request.body;
+exports.postSkills = (request, response) => {
+  const { age, concerts, cities, years } = getSkillValues();
+  const {
+    age: newAge,
+    concerts: newConcerts,
+    cities: newCities,
+    years: newYears
+  } = request.body;
 
-    if (age != newAge) setSkillValue("age", newAge);
-    if (concerts != newConcerts) setSkillValue("concerts", newConcerts);
-    if (cities != newCities) setSkillValue("cities", newCities);
-    if (years != newYears) setSkillValue("years", newYears);
+  if (age != newAge) setSkillValue("age", newAge);
+  if (concerts != newConcerts) setSkillValue("concerts", newConcerts);
+  if (cities != newCities) setSkillValue("cities", newCities);
+  if (years != newYears) setSkillValue("years", newYears);
 
-    ctx.redirect("/admin");
-  } catch (err) {
-    webError(err, ctx, 400);
-  }
+  response.redirect("/admin");
 };
 
-exports.postUpload = async (ctx, next) => {
+exports.postUpload = (request, response) => {
+  const { name, price } = request.body;
+  const { name: photoName, size, mv } = request.files.photo;
+  const uploadDir = path.join(
+    process.cwd(),
+    "/public",
+    "assets",
+    "img",
+    "products"
+  );
   try {
-    const { name, price } = ctx.request.body;
-    const { name: photoName, size, path: tempPath } = ctx.request.files.photo;
-    const uploadDir = path.join(
-      process.cwd(),
-      "/public",
-      "assets",
-      "img",
-      "products"
-    );
-
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir);
     }
     if (!name || !price) {
-      fs.unlinkSync(tempPath);
       throw "All fields are required";
     }
     if (!photoName || !size) {
-      fs.unlinkSync(tempPath);
       throw "File not saved";
     }
 
-    fs.renameSync(tempPath, path.join(uploadDir, photoName));
+    mv(path.join(uploadDir, photoName));
 
     lowdb
       .get("products")
@@ -70,11 +59,10 @@ exports.postUpload = async (ctx, next) => {
         price: price
       })
       .write();
-
-    ctx.redirect("/admin");
-  } catch (err) {
-    webError(err, ctx, 400);
+  } catch(err) {
+    request.flash("msgfile", err);
   }
+  response.redirect("/admin");
 };
 
 const setSkillValue = (key, value) => {

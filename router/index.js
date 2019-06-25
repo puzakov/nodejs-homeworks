@@ -1,11 +1,11 @@
 const { mainCtrl, adminCtrl, loginCtrl } = require("../controllers");
-const Router = require("koa-router");
-const router = new Router();
+const express = require("express");
+const router = express.Router();
 
-router.all(/.*/, (ctx, next) => { 
+router.use((request, response, next) => {
+  console.log(`Request ${request.method}: ${request.url}`);
   next();
-  console.log(`Request ${ctx.request.method}: ${ctx.request.url} ${ctx.status}`);
-})
+});
 
 router.get("/", mainCtrl.get);
 router.post("/", mainCtrl.post);

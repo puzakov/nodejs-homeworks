@@ -1,39 +1,31 @@
-const { webError, lowdb } = require("../util");
+const { lowdb } = require("../util");
 
-exports.get = async (ctx, next) => {
-  console.log("ctx.flash", ctx.flash);
-  try {
-    const msgslogin =
-    ctx.flash && ctx.flash.get() ? ctx.flash.get().msgslogin : null;
-    
-    console.log("msgslogin", msgslogin);
-    ctx.render("login", {
-      social: lowdb.get("social").value(),
-      msgslogin
-    });
-  } catch (err) {
-    webError(err, ctx, 400);
-  }
+exports.get = (request, response) => {
+  const { msgslogin } = request.flash();
+  response.render("login", {
+    social: lowdb.get("social").value(),
+    msgslogin
+  });
 };
 
-exports.post = async (ctx, next) => {
+exports.post = (request, response) => {
   const { email, password } = lowdb.get("auth").value();
-  const credentials = ctx.request.body;
+  const credentials = { ...request.body };
 
   try {
     if (!credentials.email || !credentials.password) {
-      throw 'Email & pass are required';
+      throw "Email & pass are required";
     }
 
     if (email !== credentials.email || password !== credentials.password) {
-      throw 'Unathorized';
+      throw "Unathorized";
     }
 
-    ctx.session.isAuth = true;
-    ctx.redirect('admin');
+    request.session.isAuth = true;
+    response.redirect("/admin");
   } catch (err) {
     console.error("err", err);
-    ctx.flash.set({ msgslogin: err });
-    ctx.redirect("/login");
+    request.flash("msgslogin", err);
+    response.redirect("/login");
   }
 };
