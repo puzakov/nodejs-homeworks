@@ -32350,13 +32350,21 @@ var user = {
     surName: '',
     username: ''
 };
+  var appFetch = ({ access_token }, url, params) => {
+  return fetch(url, {
+    ...params,
+    headers: {
+      'Authorization': `Bearer ${access_token}`
+    },
+  })
+}  
 var actions = {
     loadNews: function (_a) {
         var commit = _a.commit;
         console.log('Автоматический GET-запрос на /api/getNews - получение списка новостей');
         console.log('Необходимо вернуть список всех новостей из базы данных!');
         return new Promise(function (resolve, reject) {
-            return fetch('/api/getNews', {
+            return appFetch(_a.state, '/api/getNews', {
                 method: 'GET'
             })
                 .then(function (response) {
@@ -32383,7 +32391,7 @@ var actions = {
         console.log('POST-запрос на /api/newNews - создание новой новости');
         console.log('Отправляемые данные: ', payload);
         console.log('Необходимо вернуть обновленный список всех новостей из базы данных!');
-        return fetch('/api/newNews/', {
+        return appFetch(_a.state, '/api/newNews/', {
             method: 'POST',
             body: JSON.stringify(payload)
         })
@@ -32410,7 +32418,7 @@ var actions = {
         console.log('PUT-запрос на /api/updateNews/:id - обновление существующей новости');
         console.log('Отправляемые данные: ', payload);
         console.log('Необходимо вернуть обновленный список всех новостей из базы данных!');
-        return fetch('/api/updateNews/' + payload.id, {
+        return appFetch(_a.state, '/api/updateNews/' + payload.id, {
             method: 'PUT',
             body: JSON.stringify(payload)
         })
@@ -32437,7 +32445,7 @@ var actions = {
         console.log('DELETE-запрос на /api/deleteNews/:id - удаление существующей новости');
         console.log('Отправляемые данные: ', payload);
         console.log('Необходимо вернуть обновленный список всех новостей из базы данных!');
-        return fetch('/api/deleteNews/' + payload.id, {
+        return appFetch(_a.state, '/api/deleteNews/' + payload.id, {
             method: 'delete'
         })
             .then(function (response) {
@@ -32464,7 +32472,7 @@ var actions = {
         console.log('Автоматический GET-запрос на /api/getUsers - получение списка пользователей');
         console.log('Необходимо вернуть список всех пользоватлей из базы данных!');
         return new Promise(function (resolve, reject) {
-            return fetch('/api/getUsers', {
+            return appFetch(_a.state, '/api/getUsers', {
                 method: 'GET'
             })
                 .then(function (response) {
@@ -32492,7 +32500,7 @@ var actions = {
         return new Promise(function (resolve, reject) {
             console.log('PUT-запрос на /api/updateUserPermission/:id - обновление существующей записи о разрешениях');
             console.log('Отправляемые данные: ', payload);
-            return fetch('/api/updateUserPermission/' + payload.permissionId, {
+            return appFetch(_a.state, '/api/updateUserPermission/' + payload.permissionId, {
                 method: 'PUT',
                 body: JSON.stringify(payload)
             })
@@ -32520,8 +32528,9 @@ var actions = {
         var commit = _a.commit;
         console.log('Автоматический POST-запрос на /api/authFromToken - авторизация при наличии токена.');
         console.log('Отправляемые данные: ', payload);
+        console.log('_a', _a);
         console.log('Необходимо вернуть объект авторизовавшегося пользователя!');
-        fetch('/api/authFromToken', {
+        appFetch(_a.state, '/api/authFromToken', {
             method: 'POST',
             body: JSON.stringify({ access_token: payload })
         })
@@ -32556,10 +32565,15 @@ var actions = {
         console.log('POST-запрос на /api/login - авторизация после пользователького ввода.');
         console.log('Отправляемые данные: ', payload);
         console.log('Необходимо вернуть объект авторизовавшегося пользователя!');
-        return fetch('/api/login', {
+        console.log(_a);
+        const token = _a.state.access_token;
+        return appFetch(_a.state, '/api/login', {
             method: 'POST',
             credentials: 'include',
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            headers: {
+              Authorization: "Bearer " + token  
+            }
         })
             .then(function (response) {
             return response.json();
@@ -32575,11 +32589,13 @@ var actions = {
                 alert("\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445");
             }
             else {
-                console.log("\u0423\u0441\u043F\u0435\u0448\u043D\u043E!");
-                commit('setUserData', {
-                    access_token: data.access_token,
-                    user: data
-                });
+              console.log("\u0423\u0441\u043F\u0435\u0448\u043D\u043E!");
+              const toSave = {
+                access_token: data.access_token,
+                user: data
+              };
+              localStorage.setItem('userData', JSON.stringify(toSave));
+              commit('setUserData', toSave);
             }
             ;
         });
@@ -32589,7 +32605,7 @@ var actions = {
         console.log('PUT-запрос на /api/updateUser/:id - обновление информации о пользователе.');
         console.log('Отправляемые данные: ', payload);
         console.log('Необходимо вернуть объект обновленного пользователя!');
-        return fetch('/api/updateUser/' + payload.id, {
+        return appFetch(_a.state, '/api/updateUser/' + payload.id, {
             method: 'PUT',
             body: JSON.stringify(payload)
         })
@@ -32623,7 +32639,7 @@ var actions = {
         data.append(payload.id, payload.file[0]);
         console.log('Отправляемые данные: ', data);
         console.log('Необходимо вернуть объект со свойством path, которое хранит путь до сохраненного изображения.');
-        return fetch('/api/saveUserImage/' + payload.id, {
+        return appFetch(_a.state, '/api/saveUserImage/' + payload.id, {
             method: 'post',
             body: data
         })
@@ -32638,7 +32654,7 @@ var actions = {
         var commit = _a.commit;
         console.log('DELETE-запрос на /api/deleteUser/:id - удаление пользователя.');
         console.log('Отправляемые данные: ', payload);
-        return fetch('/api/deleteUser/' + payload.id, {
+        return appFetch(_a.state, '/api/deleteUser/' + payload.id, {
             method: 'delete'
         })
             .then(function (response) {
@@ -32684,7 +32700,7 @@ var actions = {
         console.log('POST-запрос на /api/saveNewUser - создание нового пользователя (регистрация).');
         console.log('Отправляемые данные: ', payload);
         console.log('Необходимо вернуть объект созданного пользователя!');
-        return fetch('/api/saveNewUser', {
+        return appFetch(_a.state, '/api/saveNewUser', {
             method: 'POST',
             credentials: 'include',
             body: JSON.stringify(payload)
@@ -32703,10 +32719,12 @@ var actions = {
             }
             else {
                 console.log("\u0423\u0441\u043F\u0435\u0448\u043D\u043E!");
-                commit('setUserData', {
-                    access_token: data.access_token,
-                    user: data
-                });
+                const toSave = {
+                  access_token: data.access_token,
+                  user: data
+                };
+                localStorage.setItem('userData', JSON.stringify(toSave));
+                commit('setUserData', toSave);
             }
             ;
         });
@@ -32749,6 +32767,7 @@ var mutations = {
     logout: function (state, payload) {
         state.access_token = undefined;
         state.user = {};
+        localStorage.removeItem('userData');
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__util_helpers__["a" /* deleteCookie */])('access_token');
     },
     setNewsList: function (state, payload) {
@@ -38501,13 +38520,17 @@ var vm = new __WEBPACK_IMPORTED_MODULE_0_vue___default.a({
             return this.$store.state.user;
         }
     },
-    created: function () {
-        var access_token = this.$store.state.access_token, user = this.$store.state.user;
-        if (access_token && access_token !== 'undefined' && user === undefined) {
-            this.$store.dispatch('loadUserData', access_token);
-        }
-        ;
+  created: function () {
+    const storageData = JSON.parse(localStorage.getItem('userData'));
+    if (!storageData) { 
+      return;
     }
+    const { access_token } = storageData;
+    // var access_token = this.$store.state.access_token, user = this.$store.state.user;
+    if (access_token && access_token !== 'undefined') {
+        this.$store.dispatch('loadUserData', access_token);
+    }
+  }
 });
 
 

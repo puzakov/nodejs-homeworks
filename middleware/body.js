@@ -4,5 +4,5 @@ module.exports = koaBody({
   formidable: {
     uploadDir: "./public/assets/img/products/"
   },
-  multipart: true
+  multipart: true,
 });
