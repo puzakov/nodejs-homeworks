@@ -36,7 +36,6 @@ passport.use(
 
 passport.use(
   new Strategy(params, function(payload, done) {
-    console.log(payload);
     User.findById(payload._id)
       .then(user => {
         if (!user) {

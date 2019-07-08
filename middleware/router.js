@@ -17,5 +17,8 @@ router.post("/login", jsonBody, authCtrl.login);
 router.post("/authFromToken", jsonBody, authCtrl.authFromToken);
 
 router.get("/getNews", auth, newsCtrl.getNews);
+router.post("/newNews", auth, jsonBody, newsCtrl.newNews);
+router.put("/updateNews/:id", auth, jsonBody, newsCtrl.updateNews);
+router.delete("/deleteNews/:id", auth, newsCtrl.deleteNews);
 
 module.exports = router;
