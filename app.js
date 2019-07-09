@@ -15,6 +15,6 @@ app
   .use(router.allowedMethods());
 
 const port = 3000;
-app.listen(port, () => {
+app.listen(process.env.PORT || port, () => {
   console.log(`Server http://localhost:${port}`);
 });
