@@ -10,7 +10,6 @@ const schema = new Schema(
       required: true,
       unique: true
     },
-    permissionId: Number,
     surName: String,
     firstName: String,
     image: String,
@@ -19,26 +18,7 @@ const schema = new Schema(
       type: String,
       required: true
     },
-    permission: {
-      chat: {
-        C: Boolean,
-        D: Boolean,
-        R: Boolean,
-        U: Boolean
-      },
-      news: {
-        C: Boolean,
-        D: Boolean,
-        R: Boolean,
-        U: Boolean
-      },
-      setting: {
-        C: Boolean,
-        D: Boolean,
-        R: Boolean,
-        U: Boolean
-      }
-    }
+    permission: { type: Schema.Types.ObjectId, ref: "Permission" },
   },
   { versionKey: false }
 );

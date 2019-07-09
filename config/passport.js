@@ -19,7 +19,7 @@ passport.use(
     },
     async (username, password, done) => {
       try {
-        const user = await User.findOne({ username });
+        const user = await User.findOne({ username }).populate("permission");
         if (!user) {
           return done("Invalid credentials");
         }
@@ -37,6 +37,7 @@ passport.use(
 passport.use(
   new Strategy(params, function(payload, done) {
     User.findById(payload._id)
+      .populate("permission")
       .then(user => {
         if (!user) {
           return done(new Error("User not found"));

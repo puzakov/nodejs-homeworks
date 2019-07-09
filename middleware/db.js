@@ -3,12 +3,6 @@ const Schema = mongoose.Schema;
 
 mongoose.Promise = global.Promise;
 
-// установка схемы
-// const personScheme = new Schema({
-//     name: String,
-//     age: Number
-// });
-
 mongoose
   .connect(
     "mongodb+srv://user:user@cluster0-lqsp2.mongodb.net/loftschool_exam?retryWrites=true&w=majority",

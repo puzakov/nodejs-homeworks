@@ -35,11 +35,11 @@ exports.login = async (ctx, next) => {
 exports.authFromToken = async (ctx, next) => {
   let error = { status: 403, message: "Invalid token" };
   const { access_token } = ctx.request.body;
-  
+
   if (!jwt.verify(access_token, secret)) throw error;
-  
+
   const tokenUser = jwt.decode(access_token);
-  const user = await User.findById(tokenUser._id);
+  const user = await User.findById(tokenUser._id).populate("permission");
   if (!user) throw error;
 
   const token = jwt.sign({ ...user.toObject() }, secret);
