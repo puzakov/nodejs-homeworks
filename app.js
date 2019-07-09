@@ -14,7 +14,7 @@ app
   .use(router.routes())
   .use(router.allowedMethods());
 
-const port = 8080;
+const port = 3000;
 app.listen(port, () => {
   console.log(`Server http://localhost:${port}`);
 });
