@@ -1,4 +1,6 @@
 const { User, Permission } = require("../model");
+const jwt = require("jsonwebtoken");
+const secret = require("../config/config.json").secret;
 
 getAllUsersFormatted = async () => {
   const allUsers = await User.find({}).populate("permission");
@@ -57,10 +59,32 @@ exports.deleteUser = async (ctx, next) => {
   const user = await User.findById(id).populate("permission");
   await user.permission.remove();
   await user.remove();
-  
+
   ctx.body = await getAllUsersFormatted();
 };
 
-exports.updateUser = async (ctx, next) => { }
+exports.updateUser = async (ctx, next) => {
+  const { id } = ctx.params;
+  const user = await User.findById(id).populate('permission');
+  const { oldPassword, password, ...names } = ctx.request.body;
 
-exports.saveUserImage = async (ctx, next) => { }
+  if (names) user.set(names);
+
+  if (oldPassword && password) {
+    if (!user.validPassword(oldPassword))
+      throw { status: 400, message: "Bad request" };
+
+    user.setPassword(password);
+  }
+
+  await user.save();
+  const token = jwt.sign({ ...user.toObject() }, secret);
+
+  ctx.body = {
+    ...user.toObject(),
+    id: user._id,
+    access_token: token
+  };
+};
+
+exports.saveUserImage = async (ctx, next) => {};
