@@ -16,7 +16,6 @@ getAllUsersFormatted = async () => {
 
 exports.saveNewUser = async (ctx, next) => {
   const fields = { ...ctx.request.body };
-  console.log(fields);
   try {
     const exist = await User.findOne({ username: fields.username });
     if (exist) throw { status: 400, message: "Can not create new user" };

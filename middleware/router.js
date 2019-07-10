@@ -16,7 +16,7 @@ router.post("/authFromToken", jsonBody, authCtrl.authFromToken);
 
 router.get("/getUsers", auth, userCtrl.getUsers);
 router.post("/saveNewUser", jsonBody, userCtrl.saveNewUser);
-router.post("/saveUserImage/:id", jsonBody, userCtrl.saveUserImage);
+router.post("/saveUserImage/:id", auth, jsonBody, userCtrl.saveUserImage);
 router.put("/updateUser/:id", auth, jsonBody, userCtrl.updateUser);
 router.put("/updateUserPermission/:id", auth, jsonBody, userCtrl.updateUserPermission);
 router.delete("/deleteUser/:id", auth, userCtrl.deleteUser);
