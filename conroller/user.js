@@ -1,5 +1,7 @@
-const { User, Permission } = require("../model");
+const path = require("path");
+const fs = require("fs");
 const jwt = require("jsonwebtoken");
+const { User, Permission } = require("../model");
 const secret = require("../config/config.json").secret;
 
 getAllUsersFormatted = async () => {
@@ -64,7 +66,7 @@ exports.deleteUser = async (ctx, next) => {
 
 exports.updateUser = async (ctx, next) => {
   const { id } = ctx.params;
-  const user = await User.findById(id).populate('permission');
+  const user = await User.findById(id).populate("permission");
   const { oldPassword, password, ...names } = ctx.request.body;
 
   if (names) user.set(names);
@@ -86,4 +88,23 @@ exports.updateUser = async (ctx, next) => {
   };
 };
 
-exports.saveUserImage = async (ctx, next) => {};
+exports.saveUserImage = async (ctx, next) => {
+  const { id } = ctx.params;
+
+  const { name: photoName, size, path: tempPath } = ctx.request.files[id];
+  const uploadDir = path.join(process.cwd(), "/public", "assets", "img", id);
+  const newPath = path.join(uploadDir, photoName);
+
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+  }
+  fs.renameSync(tempPath, newPath);
+
+  const user = await User.findById(id);
+  if (user.image)
+    fs.unlinkSync(path.join(process.cwd(), "/public", user.image));
+
+  await user.set({ image: `/assets/img/${id}/${photoName}` }).save();
+
+  ctx.body = { path: user.image };
+};
