@@ -101,7 +101,10 @@ exports.saveUserImage = async (ctx, next) => {
   fs.renameSync(tempPath, newPath);
 
   const user = await User.findById(id);
-  if (user.image)
+  if (
+    user.image &&
+    fs.existsSync(path.join(process.cwd(), "/public", user.image))
+  )
     fs.unlinkSync(path.join(process.cwd(), "/public", user.image));
 
   await user.set({ image: `/assets/img/${id}/${photoName}` }).save();
